@@ -35,35 +35,35 @@ spec:
         app: judge-k8s-webhook
     spec:
       containers:
-      - name: judge-k8s-webhook
-        image: "skaffold-dev:34751/judge-k8s"
-        command:
-          - "judge-k8s"
-          - "serve"
-        args:
-          - "--cert=/run/secrets/tls/tls.crt"
-          - "--key=/run/secrets/tls/tls.key"
-          - "--policy=/run/witness-policy/witness-policy.json"
-          - "--port=1323"
-          - "--b64-public-key=/run/witness-policy/public-key.pem.b64"
-          - "--rekor-server=http://rekor-server.default.svc.cluster.local:8077"
-        volumeMounts:
-        - name: webhook-tls-certs
-          mountPath: /run/secrets/tls
-          readOnly: true
-        - name: witness-policy
-          mountPath: /run/witness-policy
-          readOnly: true
-        ports:
-        - name: http
-          containerPort: 1323
+        - name: judge-k8s-webhook
+          image: "skaffold-dev:34751/judge-k8s"
+          command:
+            - "judge-k8s"
+            - "serve"
+          args:
+            - "--cert=/run/secrets/tls/tls.crt"
+            - "--key=/run/secrets/tls/tls.key"
+            - "--policy=/run/witness-policy/witness-policy.json"
+            - "--port=1323"
+            - "--b64-public-key=/run/witness-policy/public-key.pem.b64"
+            # - "--rekor-server=http://rekor-server.default.svc.cluster.local:8077"
+          volumeMounts:
+            - name: webhook-tls-certs
+              mountPath: /run/secrets/tls
+              readOnly: true
+            - name: witness-policy
+              mountPath: /run/witness-policy
+              readOnly: true
+          ports:
+            - name: http
+              containerPort: 1323
       volumes:
-      - name: webhook-tls-certs
-        secret:
-          secretName: webhook-server-tls
-      - name: witness-policy
-        configMap:
-          name: witness-policy
+        - name: webhook-tls-certs
+          secret:
+            secretName: webhook-server-tls
+        - name: witness-policy
+          configMap:
+            name: witness-policy
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -84,7 +84,7 @@ webhooks:
         resources: ["pods"]
         scope: "Namespaced"
     clientConfig:
-      caBundle: {{CA_PEM_B64}}
+      caBundle: { { CA_PEM_B64 } }
       service:
         name: judge-k8s-webhook
         namespace: judge-test
@@ -96,7 +96,7 @@ metadata:
   namespace: judge-test
   name: witness-policy
 data:
-  witness-policy.json: | 
+  witness-policy.json: |
     {{WITNESSPOLICY}}
   public-key.pem.b64: |
     {{PUBLIC_KEY_B64}}

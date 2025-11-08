@@ -3,9 +3,9 @@ package cmd
 import (
 	"os"
 
+	"github.com/in-toto/go-witness/log"
 	"github.com/spf13/cobra"
 	"github.com/testifysec/judge-k8s/cmd/options"
-	"github.com/testifysec/witness/pkg/log"
 )
 
 var (

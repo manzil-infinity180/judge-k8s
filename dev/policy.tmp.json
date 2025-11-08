@@ -1,0 +1,42 @@
+{
+  "expires": "2027-12-17T23:57:40-05:00",
+  "steps": {
+    "build": {
+      "name": "build",
+      "attestations": [
+        {
+          "type": "https://witness.testifysec.com/attestations/material/v0.1",
+          "regopolicies": []
+        },
+        {
+          "type": "https://witness.testifysec.com/attestations/command-run/v0.1",
+          "regopolicies": [
+            {
+              "name": "testpolicy",
+              "module": "cGFja2FnZSB0ZXN0cG9saWN5CgpkZW55W21zZ117CglpbnB1dC5leGl0Y29kZSAhPSAwCiAgICBtc2cgOj0gIm5vbi16ZXJvIGV4aXQgY29kZSIKfQoKZGVueVttc2ddewoJaW5wdXQuY21kWzBdICE9ICJiYXNoMiIKICAgIG1zZyA6PSAiYmFzaCBub3QgdXNlZCIKfQ=="
+            }
+          ]
+        },
+        {
+          "type": "https://witness.testifysec.com/attestations/product/v0.1",
+          "regopolicies": []
+        },
+        {
+          "type": "https://witness.testifysec.com/attestations/oci/v0.1",
+          "regopolicies": []
+        }
+      ],
+      "functionaries": [
+        {
+          "publickeyid": "26836d557770730380db043ff4fe984ba8594e4244046add0dff7baadf51e6ab"
+        }
+      ]
+    }
+  },
+  "publickeys": {
+    "26836d557770730380db043ff4fe984ba8594e4244046add0dff7baadf51e6ab": {
+      "keyid": "26836d557770730380db043ff4fe984ba8594e4244046add0dff7baadf51e6ab",
+      "key": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQWtQbHBOOHUwZTlKMktPL0RTZTcrM1lTdlJXY1BjQ2hqN0lUQnNoWlM1dUk9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo="
+    }
+  }
+}

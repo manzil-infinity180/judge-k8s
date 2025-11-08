@@ -35,35 +35,35 @@ spec:
         app: judge-k8s-webhook
     spec:
       containers:
-      - name: judge-k8s-webhook
-        image: "skaffold-dev:34751/judge-k8s"
-        command:
-          - "judge-k8s"
-          - "serve"
-        args:
-          - "--cert=/run/secrets/tls/tls.crt"
-          - "--key=/run/secrets/tls/tls.key"
-          - "--policy=/run/witness-policy/witness-policy.json"
-          - "--port=1323"
-          - "--b64-public-key=/run/witness-policy/public-key.pem.b64"
-          - "--rekor-server=http://rekor-server.default.svc.cluster.local:8077"
-        volumeMounts:
-        - name: webhook-tls-certs
-          mountPath: /run/secrets/tls
-          readOnly: true
-        - name: witness-policy
-          mountPath: /run/witness-policy
-          readOnly: true
-        ports:
-        - name: http
-          containerPort: 1323
+        - name: judge-k8s-webhook
+          image: "skaffold-dev:34751/judge-k8s"
+          command:
+            - "judge-k8s"
+            - "serve"
+          args:
+            - "--cert=/run/secrets/tls/tls.crt"
+            - "--key=/run/secrets/tls/tls.key"
+            - "--policy=/run/witness-policy/witness-policy.json"
+            - "--port=1323"
+            - "--b64-public-key=/run/witness-policy/public-key.pem.b64"
+            # - "--rekor-server=http://rekor-server.default.svc.cluster.local:8077"
+          volumeMounts:
+            - name: webhook-tls-certs
+              mountPath: /run/secrets/tls
+              readOnly: true
+            - name: witness-policy
+              mountPath: /run/witness-policy
+              readOnly: true
+          ports:
+            - name: http
+              containerPort: 1323
       volumes:
-      - name: webhook-tls-certs
-        secret:
-          secretName: webhook-server-tls
-      - name: witness-policy
-        configMap:
-          name: witness-policy
+        - name: webhook-tls-certs
+          secret:
+            secretName: webhook-server-tls
+        - name: witness-policy
+          configMap:
+            name: witness-policy
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -75,7 +75,7 @@ webhooks:
     admissionReviewVersions:
       - "v1"
       - "v1beta1"
-    failurePolicy: Fail
+    failurePolicy: Ignore
     sideEffects: None
     rules:
       - operations: ["CREATE"]
@@ -84,7 +84,8 @@ webhooks:
         resources: ["pods"]
         scope: "Namespaced"
     clientConfig:
-      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURQekNDQWllZ0F3SUJBZ0lVQ2Z1Tzg2Q3J2UEM0V0ZURW5wbzVQVDRxbmZZd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0x6RXRNQ3NHQTFVRUF3d2tRV1J0YVhOemFXOXVJRU52Ym5SeWIyeHNaWElnVjJWaWFHOXZheUJFWlcxdgpJRU5CTUI0WERUSXlNREl4TVRJeE1UZzFNRm9YRFRJeU1ETXhNekl4TVRnMU1Gb3dMekV0TUNzR0ExVUVBd3drClFXUnRhWE56YVc5dUlFTnZiblJ5YjJ4c1pYSWdWMlZpYUc5dmF5QkVaVzF2SUVOQk1JSUJJakFOQmdrcWhraUcKOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQW4wempZTGdjNERZdU1uUTBlaVJncTVlbGQyTXNhYXczL1VkcApTbmlyRmg4ZDFHeWoxUS82c0RFaENtQ2VaaFovZ1d3MXk3R200bXdWNEdrOGwrWkhkMk9tM2FtVDFJMmJXZmpGCm9raHJBWmJuVnVPbzRFYmFYUnVrd0tUUUdiUGZ0TGVwS0t6eXVNalA1bTJxYlhIZVF3dHNPbHNoKzhNN3AvMzcKYUdjMmZnR2tTU3dSZnVtMms1WjQxM3h0Q29UMGpRL2tXUSsvQzdNT0tZSmthc05hVVZhbE9iWVZRSEZUdTFweQorOVVFU0JkWVg4anJKd01FeEoxOW5ORDd2NHRuK3pwVGF1N3NzSkRhTEdrU2lUb2tOS0ZSZ3ZkUndQZk5WNnJMCkF4V05mdVVwZGFWNDh0c05rUFRRM05RYzEvWGtVdUxBUm16a0pTeUFOa1ZzeVlhcGNRSURBUUFCbzFNd1VUQWQKQmdOVkhRNEVGZ1FVSkh4aUtXK3NGLyttcnJlMEVNaUplZGVxc3BZd0h3WURWUjBqQkJnd0ZvQVVKSHhpS1crcwpGLyttcnJlMEVNaUplZGVxc3BZd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBTkJna3Foa2lHOXcwQkFRc0ZBQU9DCkFRRUFPQ25zN1RqaGFHcWpzdDJ6eVJGM0JjUlV0djlhWHRlNUxlOVpFQ0FWK082bjFnTDRBZEE1NjFOY0ZuWFEKdkRjOG9zMFJHUmhQc2lDNTJzZlNpeWgxYm5PMkNoY3hNVTMzaXZDZG5DVlcwL2xxTmdTZFpwcm5NUllhSzRPegowbjR2ODNVRjBBWDVMZFQ3d0VJM05sWTVEUG1UY3lCTlRnMFVBSStlS3VwWFdSQkxrbVZleWZhS2pyeFNkSE4yCmJRVXRYaEx1MDc5WUl6aGVUL1NHeWFLUnlXeEZSd3djMW8wTjhVSENXRjdpdmVGMmNqeWRlNWd4TEJQNUhpbW8KUDZmN2g5Vm9ubCsrcmxSVFFoOHhWZ1FkdkhTOTVYVFNVUkdaWFBEcStmUjNQMjRTOTdMVzlyaFdUcjdYQlRZTQo3MDN0L2hobWg2cFhydit1QklwSEl4YkZjZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+      caBundle: |
+        LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURQekNDQWllZ0F3SUJBZ0lVT29ia2hWbkprNVkwQjBYZzU0MUk2U3pyM3Brd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0x6RXRNQ3NHQTFVRUF3d2tRV1J0YVhOemFXOXVJRU52Ym5SeWIyeHNaWElnVjJWaWFHOXZheUJFWlcxdgpJRU5CTUI0WERUSTFNVEV3TnpFeE1EY3dObG9YRFRJMU1USXdOekV4TURjd05sb3dMekV0TUNzR0ExVUVBd3drClFXUnRhWE56YVc5dUlFTnZiblJ5YjJ4c1pYSWdWMlZpYUc5dmF5QkVaVzF2SUVOQk1JSUJJakFOQmdrcWhraUcKOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQWxpcGtXbFBPWUdMemh4WVRHa2FYaUtWTFZCNG1heFFLaUo0ZgpSYkQxVUVYdDRZYjg4OEdCKzBqSHh2YjBGd1hqZTVhNXZRM0VpcWFEL0ljaDJ3akZEa3d3VExsUmgrWkFvV2NTCi9jNFZzSUVTTnhzdFlHaFVCRmxEWitaNGdsSWJYTndOZWd6OEsrS093bmRWTzgrRzlyMXBVMFc0STJ6SXRza3QKUzdydFJ5UGFucUJadWVnY1p1c2MxNEt0QWN4aHg3dzhCZ1R6NXVPMG9ieVV3Y3M3eFd2MkhDN3l3S1BicXlOTQpXak5CSXdXQ3RCSEwwVFJ1YUdVU095TEZCNU56WXhTMVMwMkRzQkNXdFFZWEFYdVNVejJGMUlOaGU1eG9hZFRpCi9KMUdYaHBraWxhNjl4ZkZ5WmpQZ1dYd0VmQStveHhZLzVQY3NDTWdRV21xUThhTVN3SURBUUFCbzFNd1VUQWQKQmdOVkhRNEVGZ1FVM1RtN3VtUXJiTXlHd29TbHZ2eTZWWnNqeGxJd0h3WURWUjBqQkJnd0ZvQVUzVG03dW1RcgpiTXlHd29TbHZ2eTZWWnNqeGxJd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBTkJna3Foa2lHOXcwQkFRc0ZBQU9DCkFRRUFpTXNuYkdZbGZwVTJYdHg4S1BmT2xTL2drMzBDNktjZUg0RXU4b2J2ZGVkRWxVL1A1NzdNL2UzbWQyMzQKS1ozbjU2cVpPS1dESTRBemE4ZEpFTkhoK2ppc09ydENHdkxCcUlsMVdVSjUxUFhkY0ZLeTJLeFdUTUZqSHN6TAp0b3lJbGtJT3Q0OE9YbHVXOU1HYVF1N3UwdnZqM0l6bmhpVStyTzkvMzdpRmFxaTdiclgyYTRyVUlPS25kNldZCkdKekhVRi8xMlc2SmpOa3BueWdvMGRNaFhwNE5GNTBSMldJRStCb2ZudzZVL0ZkcVRjTzRSRWI5SzZkKytDZmEKY2xjQ252dU9CSTNLQmJ2dHJiUS9nU1NvZ3V2ZjhNR0cxVGJMYjJBUEY5dGcwd2FEaHp4N0R6eGRmQWx4N25MQwpxcUN2MFpOd2Q2ZDdORGUxYjBxY1BlWmJGQT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
       service:
         name: judge-k8s-webhook
         namespace: judge-test
@@ -96,7 +97,7 @@ metadata:
   namespace: judge-test
   name: witness-policy
 data:
-  witness-policy.json: | 
-    {"payload":"ewogICJleHBpcmVzIjogIjIwMjItMTItMTdUMjM6NTc6NDAtMDU6MDAiLAogICJzdGVwcyI6IHsKICAgICJidWlsZCI6IHsKICAgICAgIm5hbWUiOiAiYnVpbGQiLAogICAgICAiYXR0ZXN0YXRpb25zIjogWwogICAgICAgIHsKICAgICAgICAgICJ0eXBlIjogImh0dHBzOi8vd2l0bmVzcy50ZXN0aWZ5c2VjLmNvbS9hdHRlc3RhdGlvbnMvbWF0ZXJpYWwvdjAuMSIsCiAgICAgICAgICAicmVnb3BvbGljaWVzIjogW10KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICJ0eXBlIjogImh0dHBzOi8vd2l0bmVzcy50ZXN0aWZ5c2VjLmNvbS9hdHRlc3RhdGlvbnMvY29tbWFuZC1ydW4vdjAuMSIsCiAgICAgICAgICAicmVnb3BvbGljaWVzIjogWwogICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgIm5hbWUiOiAidGVzdHBvbGljeSIsCiAgICAgICAgICAgICAgICAgICJtb2R1bGUiOiAiY0dGamEyRm5aU0IwWlhOMGNHOXNhV041Q2dwa1pXNTVXMjF6WjExN0NnbHBibkIxZEM1bGVHbDBZMjlrWlNBaFBTQXdDaUFnSUNCdGMyY2dPajBnSW01dmJpMTZaWEp2SUdWNGFYUWdZMjlrWlNJS2ZRb0taR1Z1ZVZ0dGMyZGRld29KYVc1d2RYUXVZMjFrV3pCZElDRTlJQ0ppWVhOb01pSUtJQ0FnSUcxelp5QTZQU0FpWW1GemFDQnViM1FnZFhObFpDSUtmUT09IgogICAgICAgICAgICAgIH1dCiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAidHlwZSI6ICJodHRwczovL3dpdG5lc3MudGVzdGlmeXNlYy5jb20vYXR0ZXN0YXRpb25zL3Byb2R1Y3QvdjAuMSIsCiAgICAgICAgICAicmVnb3BvbGljaWVzIjogW10KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICJ0eXBlIjogImh0dHBzOi8vd2l0bmVzcy50ZXN0aWZ5c2VjLmNvbS9hdHRlc3RhdGlvbnMvb2NpL3YwLjEiLAogICAgICAgICAgInJlZ29wb2xpY2llcyI6IFtdCiAgICAgICAgfQogICAgICBdLAogICAgICAiZnVuY3Rpb25hcmllcyI6IFsKICAgICAgICB7CiAgICAgICAgICAicHVibGlja2V5aWQiOiAiOTI5ODVjNjU0N2U0NmFmMmQ4OWZiNDYxNTE4NzAwM2M3ZWVhNmU4MGNiNDgyN2U4YTBkODZiZTFiZmE3NWM0OCIKICAgICAgICB9CiAgICAgIF0KICAgIH0KICB9LAogICJwdWJsaWNrZXlzIjogewogICAgIjkyOTg1YzY1NDdlNDZhZjJkODlmYjQ2MTUxODcwMDNjN2VlYTZlODBjYjQ4MjdlOGEwZDg2YmUxYmZhNzVjNDgiOiB7CiAgICAgICJrZXlpZCI6ICI5Mjk4NWM2NTQ3ZTQ2YWYyZDg5ZmI0NjE1MTg3MDAzYzdlZWE2ZTgwY2I0ODI3ZThhMGQ4NmJlMWJmYTc1YzQ4IiwKICAgICAgImtleSI6ICJMUzB0TFMxQ1JVZEpUaUJRVlVKTVNVTWdTMFZaTFMwdExTMEtUVU52ZDBKUldVUkxNbFozUVhsRlFURjVVVWxYY0VWSlZqQTVkMDlyYTJ4VmRUVk5VbFZ6WXpKNldpOHZaVEkyZDFwYVYzbDFkVTQ0V0RBOUNpMHRMUzB0UlU1RUlGQlZRa3hKUXlCTFJWa3RMUzB0TFFvPSIKICAgIH0KICB9Cn0=","payloadType":"https://witness.testifysec.com/policy/v0.1","signatures":[{"keyid":"92985c6547e46af2d89fb4615187003c7eea6e80cb4827e8a0d86be1bfa75c48","sig":"gLBsPROxLQvWqz0H3w6s3o99aoyhsLwYSC4H5/SqELhZPokhTdg9xvUgeJKWdhbeNl6oQkD8kleUmByl4fFDCw=="}]}
+  witness-policy.json: |
+    {"payload":"ewogICJleHBpcmVzIjogIjIwMjctMTItMTdUMjM6NTc6NDAtMDU6MDAiLAogICJzdGVwcyI6IHsKICAgICJidWlsZCI6IHsKICAgICAgIm5hbWUiOiAiYnVpbGQiLAogICAgICAiYXR0ZXN0YXRpb25zIjogWwogICAgICAgIHsKICAgICAgICAgICJ0eXBlIjogImh0dHBzOi8vd2l0bmVzcy50ZXN0aWZ5c2VjLmNvbS9hdHRlc3RhdGlvbnMvbWF0ZXJpYWwvdjAuMSIsCiAgICAgICAgICAicmVnb3BvbGljaWVzIjogW10KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICJ0eXBlIjogImh0dHBzOi8vd2l0bmVzcy50ZXN0aWZ5c2VjLmNvbS9hdHRlc3RhdGlvbnMvY29tbWFuZC1ydW4vdjAuMSIsCiAgICAgICAgICAicmVnb3BvbGljaWVzIjogWwogICAgICAgICAgICB7CiAgICAgICAgICAgICAgIm5hbWUiOiAidGVzdHBvbGljeSIsCiAgICAgICAgICAgICAgIm1vZHVsZSI6ICJjR0ZqYTJGblpTQjBaWE4wY0c5c2FXTjVDZ3BrWlc1NVcyMXpaMTE3Q2dscGJuQjFkQzVsZUdsMFkyOWtaU0FoUFNBd0NpQWdJQ0J0YzJjZ09qMGdJbTV2YmkxNlpYSnZJR1Y0YVhRZ1kyOWtaU0lLZlFvS1pHVnVlVnR0YzJkZGV3b0phVzV3ZFhRdVkyMWtXekJkSUNFOUlDSmlZWE5vTWlJS0lDQWdJRzF6WnlBNlBTQWlZbUZ6YUNCdWIzUWdkWE5sWkNJS2ZRPT0iCiAgICAgICAgICAgIH0KICAgICAgICAgIF0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICJ0eXBlIjogImh0dHBzOi8vd2l0bmVzcy50ZXN0aWZ5c2VjLmNvbS9hdHRlc3RhdGlvbnMvcHJvZHVjdC92MC4xIiwKICAgICAgICAgICJyZWdvcG9saWNpZXMiOiBbXQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgInR5cGUiOiAiaHR0cHM6Ly93aXRuZXNzLnRlc3RpZnlzZWMuY29tL2F0dGVzdGF0aW9ucy9vY2kvdjAuMSIsCiAgICAgICAgICAicmVnb3BvbGljaWVzIjogW10KICAgICAgICB9CiAgICAgIF0sCiAgICAgICJmdW5jdGlvbmFyaWVzIjogWwogICAgICAgIHsKICAgICAgICAgICJwdWJsaWNrZXlpZCI6ICIyNjgzNmQ1NTc3NzA3MzAzODBkYjA0M2ZmNGZlOTg0YmE4NTk0ZTQyNDQwNDZhZGQwZGZmN2JhYWRmNTFlNmFiIgogICAgICAgIH0KICAgICAgXQogICAgfQogIH0sCiAgInB1YmxpY2tleXMiOiB7CiAgICAiMjY4MzZkNTU3NzcwNzMwMzgwZGIwNDNmZjRmZTk4NGJhODU5NGU0MjQ0MDQ2YWRkMGRmZjdiYWFkZjUxZTZhYiI6IHsKICAgICAgImtleWlkIjogIjI2ODM2ZDU1Nzc3MDczMDM4MGRiMDQzZmY0ZmU5ODRiYTg1OTRlNDI0NDA0NmFkZDBkZmY3YmFhZGY1MWU2YWIiLAogICAgICAia2V5IjogIkxTMHRMUzFDUlVkSlRpQlFWVUpNU1VNZ1MwVlpMUzB0TFMwS1RVTnZkMEpSV1VSTE1sWjNRWGxGUVd0UWJIQk9PSFV3WlRsS01rdFBMMFJUWlRjck0xbFRkbEpYWTFCalEyaHFOMGxVUW5Ob1dsTTFkVWs5Q2kwdExTMHRSVTVFSUZCVlFreEpReUJMUlZrdExTMHRMUW89IgogICAgfQogIH0KfQo=","payloadType":"https://witness.testifysec.com/policy/v0.1","signatures":[{"keyid":"26836d557770730380db043ff4fe984ba8594e4244046add0dff7baadf51e6ab","sig":"oOFYxWj6mbCqCbC/gO4OIZoeVd0pEfyJoznCCoOrLtxxGtL+R8k3oHOHdmbD7tBaoDnv/Nwj5/+DmXJexTB3BA=="}]}
   public-key.pem.b64: |
-    LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQTF5UUlXcEVJVjA5d09ra2xVdTVNUlVzYzJ6Wi8vZTI2d1paV3l1dU44WDA9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo=
+    LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQWtQbHBOOHUwZTlKMktPL0RTZTcrM1lTdlJXY1BjQ2hqN0lUQnNoWlM1dUk9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo=

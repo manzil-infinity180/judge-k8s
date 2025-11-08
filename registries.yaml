@@ -1,0 +1,4 @@
+mirrors:
+  "localhost:34751":
+    endpoint:
+      - http://k3d-myregistry:5000

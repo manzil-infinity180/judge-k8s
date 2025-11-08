@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-annotated-deployment
+  namespace: judge-test
+  annotations:
+    my-custom-annotation: "This is a custom note"
+    another-annotation: "value-for-another-annotation"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+      annotations: # Annotations can also be applied to the Pod template
+        pod-owner: "dev-team"
+    spec:
+      containers:
+        - name: my-container
+          image: nginx:latest
+          ports:
+            - containerPort: 80

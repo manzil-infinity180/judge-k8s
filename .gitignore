@@ -3,3 +3,6 @@
 kube-image-bouncer
 pki
 .dccache
+*.DS_Store
+*.crt
+*.srl

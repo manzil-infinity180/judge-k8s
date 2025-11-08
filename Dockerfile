@@ -1,4 +1,4 @@
-FROM golang:1.8-alpine
+FROM golang:1.24-alpine
 
 COPY . /go/src/github.com/flavio/kube-image-bouncer
 WORKDIR /go/src/github.com/flavio/kube-image-bouncer
