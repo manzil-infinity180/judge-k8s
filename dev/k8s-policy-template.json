@@ -1,0 +1,37 @@
+{
+  "expires": "2027-12-17T23:57:40-05:00",
+  "steps": {
+    "build": {
+      "name": "build",
+      "attestations": [
+        {
+          "type": "https://witness.dev/attestations/material/v0.1",
+          "regopolicies": []
+        },
+        {
+          "type": "https://witness.dev/attestations/command-run/v0.1",
+          "regopolicies": []
+        },
+        {
+          "type": "https://witness.dev/attestations/product/v0.1",
+          "regopolicies": []
+        },
+        {
+          "type": "https://witness.dev/attestations/k8smanifest/v0.2",
+          "regopolicies": []
+        }
+      ],
+      "functionaries": [
+        {
+          "publickeyid": "{{PUBLIC_KEY_ID}}"
+        }
+      ]
+    }
+  },
+  "publickeys": {
+    "{{PUBLIC_KEY_ID}}": {
+      "keyid": "{{PUBLIC_KEY_ID}}",
+      "key": "{{B64_PUBLIC_KEY}}"
+    }
+  }
+}

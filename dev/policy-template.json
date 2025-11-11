@@ -5,24 +5,19 @@
       "name": "build",
       "attestations": [
         {
-          "type": "https://witness.testifysec.com/attestations/material/v0.1",
+          "type": "https://witness.dev/attestations/material/v0.1",
           "regopolicies": []
         },
         {
-          "type": "https://witness.testifysec.com/attestations/command-run/v0.1",
-          "regopolicies": [
-            {
-              "name": "testpolicy",
-              "module": "{{B64_POLICY_MODULE}}"
-            }
-          ]
-        },
-        {
-          "type": "https://witness.testifysec.com/attestations/product/v0.1",
+          "type": "https://witness.dev/attestations/command-run/v0.1",
           "regopolicies": []
         },
         {
-          "type": "https://witness.testifysec.com/attestations/oci/v0.1",
+          "type": "https://witness.dev/attestations/product/v0.1",
+          "regopolicies": []
+        },
+        {
+          "type": "https://witness.dev/attestations/oci/v0.1",
           "regopolicies": []
         }
       ],

@@ -57,8 +57,10 @@ openssl pkey -in testkey.pem -pubout > testpub.pem
 #get b64 of policy
 rego_b64="$(openssl base64 -A <"testpolicy.rego")"
 
-#add b64 rego to policy template
-cp policy-template.json policy.tmp.json
+# add b64 rego to policy template
+
+# cp policy-template.json policy.tmp.json # oci
+cp k8s-policy-template.json policy.tmp.json # k8s-manifest
 
 # id=`sha256 testpub.pem | awk '{print $1}'` && sed -i "s/{{PUBLIC_KEY_ID}}/$id/g" policy.tmp.json
 id=$(shasum -a 256 testpub.pem | awk '{print $1}') && sed_inplace "s/{{PUBLIC_KEY_ID}}/$id/g" policy.tmp.json
@@ -68,7 +70,7 @@ sed_inplace "s/{{B64_POLICY_MODULE}}/$rego_b64/g" policy.tmp.json
 #sign policy with witness
 # witness -c witness-conf.yaml sign -f policy.tmp.json
 #rm policy.tmp.json
-witness sign -f policy.tmp.json --signer-file-key-path testkey.pem --outfile policy-signed.json
+witness sign -f policy.tmp.json -k testkey.pem --outfile policy-signed.json
 policy=`cat policy-signed.json`
 
 # webhook server TLS
@@ -82,7 +84,9 @@ pubb64=`cat testpub.pem | base64 -w 0`
 cp deploy.tmpl.yaml judge-k8s-webhook.yaml
 
 #add the CA to the webhook config
-sed_inplace "s/{{CA_PEM_B64}}/$ca_pem_b64/g" judge-k8s-webhook.yaml
+# sed_inplace "s/{{CA_PEM_B64}}/$ca_pem_b64/g" judge-k8s-webhook.yaml
+# sed_inplace 's@${ { CA_PEM_B64 } }@'"$ca_pem_b64"'@g' judge-k8s-webhook.yaml
+sed_inplace "s#{ { CA_PEM_B64 } }#$ca_pem_b64#g" judge-k8s-webhook.yaml
 # sed -e 's@${CA_PEM_B64}@'"$ca_pem_b64"'@g' <"deploy.tmpl.yml" > "deploy.tmpl.tmp.yml"
 
 # add the signed witness policy to the wbhookconfig

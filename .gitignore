@@ -6,3 +6,5 @@ pki
 *.DS_Store
 *.crt
 *.srl
+dev/pods.json
+dev/tmp/out.tar

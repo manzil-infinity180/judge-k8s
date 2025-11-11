@@ -2,6 +2,7 @@ package rules
 
 import (
 	"context"
+	"crypto"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"github.com/in-toto/go-witness/cryptoutil"
 	"github.com/in-toto/go-witness/dsse"
 	"github.com/in-toto/go-witness/log"
+	"github.com/in-toto/go-witness/source"
 	"github.com/regclient/regclient"
 	"github.com/regclient/regclient/config"
 	"github.com/regclient/regclient/types/manifest"
@@ -100,19 +102,19 @@ func (wp *WitnessPolicy) Verify(imageRef string) ([]string, error) {
 		return nil, fmt.Errorf("failed to get manifest: %v", err)
 	}
 
-	digestx, err := m.GetConfigDigest()
+	digest, err := m.GetConfigDigest()
 	if err != nil {
 		fmt.Printf("failed to get config digest: %v\n", err)
 		return nil, fmt.Errorf("failed to get config digest: %v", err)
 	}
-	log.Info(digestx.String())
+	log.Info(digest.String())
 
 	// err = wp.getRekorEntries(configDigest.String())
 	// if err != nil {
 	// 	fmt.Printf("failed to get rekor entries: %v=n", err)
 	// 	return nil, fmt.Errorf("failed to get rekor entries: %v", err)
 	// }
-	err = wp.doesPassWitnessPolicy()
+	err = wp.doesPassWitnessPolicy(digest.String())
 	if err != nil {
 		fmt.Printf("failed to pass witness policy: %v\n", err)
 		return []string{}, err
@@ -195,7 +197,7 @@ func (wp *WitnessPolicy) getManifest(imageRef string) (manifest.Manifest, error)
 
 // }
 
-func (wp *WitnessPolicy) doesPassWitnessPolicy() error {
+func (wp *WitnessPolicy) doesPassWitnessPolicy(digestStr string) error {
 	log.Info("into the doesPassWitnessPolicy")
 	policyEnvelope := dsse.Envelope{}
 	err := json.Unmarshal(wp.Policy, &policyEnvelope)
@@ -210,11 +212,43 @@ func (wp *WitnessPolicy) doesPassWitnessPolicy() error {
 	if err != nil {
 		return fmt.Errorf("failed to load key: %v", err)
 	}
+	var collectionSource source.Sourcer
+	memSource := source.NewMemorySource()
+	collectionSource = memSource
+	collectionSource = source.NewMultiSource(collectionSource)
+	// for i, env := range wp.Envelopes {
+	// 	// Use index as reference, or you could use the digest
+	// 	fmt.Println(env)
+	// 	reference := fmt.Sprintf("envelope-%d", i)
+	// 	if err := memSource.LoadEnvelope(reference, env); err != nil {
+	// 		return fmt.Errorf("failed to load envelope %d: %v", i, err)
+	// 	}
+	// }
+
+	// Parse the digest
+	digestParts := strings.SplitN(digestStr, ":", 2)
+	if len(digestParts) != 2 {
+		return fmt.Errorf("invalid digest format: %s", digestStr)
+	}
+
+	subjectDigest := digestParts[1]
+	subjects := []cryptoutil.DigestSet{
+		{
+			cryptoutil.DigestValue{
+				Hash:   crypto.SHA256,
+				GitOID: false,
+			}: subjectDigest,
+		},
+	}
 	// veropt := witness_dev.VerifyWithCollectionEnvelopes(wp.Envelopes)
 	// spew.Dump(veropt)
 	ctx := context.Background()
 	log.Info("witness_dev.Verify")
-	reason, err := witness_dev.Verify(ctx, policyEnvelope, []cryptoutil.Verifier{verifier})
+
+	reason, err := witness_dev.Verify(ctx, policyEnvelope, []cryptoutil.Verifier{verifier},
+		witness_dev.VerifyWithSubjectDigests(subjects),
+		witness_dev.VerifyWithCollectionSource(collectionSource),
+	)
 	if err != nil {
 
 		return fmt.Errorf("policy failed to verify: %v %v", reason, err)
@@ -239,17 +273,6 @@ func (wp *WitnessPolicy) doesPassWitnessPolicy() error {
 
 		fmt.Printf("envelope:\n %s\n", out)
 	}
-	// https://github.com/in-toto/go-witness/blob/c0c02fa4fa1d7884f3438b9ce5774cc698939872/policy/policy.go#L192
-	/**
-	 [judge-k8s-webhook] failed to pass witness policy: policy failed to verify: {{{ []} {[]  []} } {{} 0001-01-01 00:00:00 +0000 UTC { map[]} [] } map[]} attestors failed with error messages
-	[judge-k8s-webhook] attestor policyverify failed: failed to verify policy: invalid option (subject digests): at least one subject digest is required
-	*/
-	/***
-	 - judge-test:deployment/judge-k8s-webhook: replica set creation failed: following errors occurred ReplicaFailureAdmissionErr: admission webhook "judge-k8s-webhook.judge-test.svc" denied the request: policy failed to verify: {{{ []} {[]  []} } {{} 0001-01-01 00:00:00 +0000 UTC { map[]} [] } map[]} attestors failed with error messages
-	attestor policyverify failed: failed to verify policy: invalid option (subject digests): at least one subject digest is required
-	 - judge-test:deployment/judge-k8s-webhook failed. Error: replica set creation failed: following errors occurred ReplicaFailureAdmissionErr: admission webhook "judge-k8s-webhook.judge-test.svc" denied the request: policy failed to verify: {{{ []} {[]  []} } {{} 0001-01-01 00:00:00 +0000 UTC { map[]} [] } map[]} attestors failed with error messages
-	attestor policyverify failed: failed to verify policy: invalid option (subject digests): at least one subject digest is required.
-	*/
 	return fmt.Errorf("policy failed to verify: %v", reason)
 }
 
