@@ -43,10 +43,12 @@ func init() {
 type WitnessPolicy struct {
 	Manifest manifest.Manifest
 	// rekorServer string
-	Envelopes []dsse.Envelope
-	RegClient *regclient.RegClient
-	Policy    []byte
-	PublicKey []byte
+	Envelopes    []dsse.Envelope
+	RegClient    *regclient.RegClient
+	Policy       []byte
+	PublicKey    []byte
+	Artifact     string   // e.g., pods.json
+	Attestations []string // e.g., []{"k8s-att.json"}
 }
 
 func New(o *options.ServeOptions) (*WitnessPolicy, error) {
@@ -80,6 +82,9 @@ func New(o *options.ServeOptions) (*WitnessPolicy, error) {
 	}
 
 	wp.Policy = b
+	wp.Artifact = o.ArtifactFile
+	wp.Attestations = o.AttestationFiles
+
 	log.Info("Initializing Registry Client...")
 	// wp.RegClient = regclient.NewRegClient()
 	// wp.RegClient = regclient.New()
@@ -214,16 +219,22 @@ func (wp *WitnessPolicy) doesPassWitnessPolicy(digestStr string) error {
 	}
 	var collectionSource source.Sourcer
 	memSource := source.NewMemorySource()
-	collectionSource = memSource
-	collectionSource = source.NewMultiSource(collectionSource)
+	// collectionSource = memSource
+	// collectionSource = source.NewMultiSource(collectionSource)
+	// Load each DSSE envelope into the memory source
 	// for i, env := range wp.Envelopes {
-	// 	// Use index as reference, or you could use the digest
-	// 	fmt.Println(env)
-	// 	reference := fmt.Sprintf("envelope-%d", i)
-	// 	if err := memSource.LoadEnvelope(reference, env); err != nil {
+	// 	ref := fmt.Sprintf("envelope-%d", i)
+	// 	if err := memSource.LoadEnvelope(ref, env); err != nil {
 	// 		return fmt.Errorf("failed to load envelope %d: %v", i, err)
 	// 	}
 	// }
+	for _, attPath := range wp.Attestations {
+		if err := memSource.LoadFile(attPath); err != nil {
+			return fmt.Errorf("failed to load attestation file %s: %v", attPath, err)
+		}
+		log.Infof("Loaded attestation: %s", attPath)
+	}
+	collectionSource = source.NewMultiSource(memSource)
 
 	// Parse the digest
 	digestParts := strings.SplitN(digestStr, ":", 2)

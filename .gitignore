@@ -8,3 +8,7 @@ pki
 *.srl
 dev/pods.json
 dev/tmp/out.tar
+dev/k8s-att.json
+policy-signed.json
+judge-k8s
+dev/policy-signed.json

@@ -46,6 +46,8 @@ spec:
             - "--policy=/run/witness-policy/witness-policy.json"
             - "--port=1323"
             - "--b64-public-key=/run/witness-policy/public-key.pem.b64"
+            - "--attestations=/data/attestation.json"
+            - "--artifactfile=/data/pods.json"
             # - "--rekor-server=http://rekor-server.default.svc.cluster.local:8077"
           volumeMounts:
             - name: webhook-tls-certs
@@ -53,6 +55,9 @@ spec:
               readOnly: true
             - name: witness-policy
               mountPath: /run/witness-policy
+              readOnly: true
+            - name: attestation-storage
+              mountPath: /data
               readOnly: true
           ports:
             - name: http
@@ -64,6 +69,9 @@ spec:
         - name: witness-policy
           configMap:
             name: witness-policy
+        - name: attestation-storage
+          persistentVolumeClaim:
+            claimName: attestation-pvc
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -84,7 +92,8 @@ webhooks:
         resources: ["pods"]
         scope: "Namespaced"
     clientConfig:
-      caBundle: { { CA_PEM_B64 } }
+      caBundle: |
+        {{CA_PEM_B64}}
       service:
         name: judge-k8s-webhook
         namespace: judge-test

@@ -21,7 +21,9 @@ type ServeOptions struct {
 	Key        string
 	PolicyFile string
 	// RekorServer string
-	PublicKey string
+	PublicKey        string
+	ArtifactFile     string   // e.g., pods.json
+	AttestationFiles []string // e.g., k8s-att.json, build.json, etc.
 }
 
 func (so *ServeOptions) AddFlags(cmd *cobra.Command) {
@@ -31,4 +33,6 @@ func (so *ServeOptions) AddFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&so.PolicyFile, "policy", "p", "", "Path to the policy file")
 	// cmd.PersistentFlags().StringVarP(&so.RekorServer, "rekor-server", "r", "http://rekor-server:8077", "Rekor server address")
 	cmd.PersistentFlags().StringVarP(&so.PublicKey, "b64-public-key", "", "", "Path to the base64, pem encoded public key file")
+	cmd.PersistentFlags().StringVarP(&so.ArtifactFile, "artifactfile", "f", "", "Path to the artifact file (e.g., pods.json)")
+	cmd.PersistentFlags().StringSliceVarP(&so.AttestationFiles, "attestations", "a", []string{}, "List of attestation files (e.g., k8s-att.json)")
 }

@@ -67,6 +67,7 @@ id=$(shasum -a 256 testpub.pem | awk '{print $1}') && sed_inplace "s/{{PUBLIC_KE
 pubb64=`cat testpub.pem | base64 -w 0` && sed_inplace "s/{{B64_PUBLIC_KEY}}/$pubb64/g" policy.tmp.json
 sed_inplace "s/{{B64_POLICY_MODULE}}/$rego_b64/g" policy.tmp.json
 
+# witness run -s build -a k8smanifest -k testkey.pem -o k8s-att.json -- kubectl get po -A -o json > pods.json
 #sign policy with witness
 # witness -c witness-conf.yaml sign -f policy.tmp.json
 #rm policy.tmp.json
@@ -86,7 +87,7 @@ cp deploy.tmpl.yaml judge-k8s-webhook.yaml
 #add the CA to the webhook config
 # sed_inplace "s/{{CA_PEM_B64}}/$ca_pem_b64/g" judge-k8s-webhook.yaml
 # sed_inplace 's@${ { CA_PEM_B64 } }@'"$ca_pem_b64"'@g' judge-k8s-webhook.yaml
-sed_inplace "s#{ { CA_PEM_B64 } }#$ca_pem_b64#g" judge-k8s-webhook.yaml
+sed_inplace "s#{{CA_PEM_B64}}#$ca_pem_b64#g" judge-k8s-webhook.yaml
 # sed -e 's@${CA_PEM_B64}@'"$ca_pem_b64"'@g' <"deploy.tmpl.yml" > "deploy.tmpl.tmp.yml"
 
 # add the signed witness policy to the wbhookconfig
@@ -95,6 +96,10 @@ sed_inplace "s#{{WITNESSPOLICY}}#$policy#g" judge-k8s-webhook.yaml
 
 # add the witness policy public key to the webhook config
 sed_inplace "s/{{PUBLIC_KEY_B64}}/$pubb64/g" judge-k8s-webhook.yaml
+
+# sed_inplace "s#{{ATTESTATION_JSON}}#$attestation#g" judge-k8s-webhook.yaml
+
+# sed_inplace "s#{{ARTIFACT_JSON}}#$artifact#g" judge-k8s-webhook.yaml
 
 mv judge-k8s-webhook.yaml ./k8s/judge-k8s-webhook.yaml
 

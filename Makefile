@@ -18,10 +18,13 @@ dev:
 	#       - http://k3d-myregistry:5000
 	# EOF
 
+	# k3d cluster delete dev
+
 	# 5. Create cluster
 	k3d cluster create dev \
 	  --registry-use k3d-myregistry:5000 \
-	  # --registry-config "/Users/rahulxf/JourneyToXYZ/k8s-witness-demo/judge-k8s/registries.yaml"
+	  --registry-config "/Users/rahulxf/JourneyToXYZ/k8s-witness-demo/judge-k8s/registries.yaml"
+	  # --volume ~/k8s:/k8s@all
 
 	# 6. Verify configuration
 	docker exec k3d-dev-server-0 cat /etc/rancher/k3s/registries.yaml
